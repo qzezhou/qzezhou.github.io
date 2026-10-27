@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>qzezhou — Blueprint</title>
+<meta name="description" content="qzezhou 的个人主页：机器人队机械组、SolidWorks、正在学习 Agent。" />
+<style>
+  :root {
+    --ink: #070c16;
+    --ink-2: #0b1322;
+    --line: rgba(120, 170, 255, 0.16);
+    --line-strong: rgba(120, 170, 255, 0.38);
+    --text: #e8eef8;
+    --muted: #8fa3c4;
+    --accent: #6fb4ff;
+    --warm: #ffcc66;
+    --mono: "Cascadia Code", "Consolas", "SFMono-Regular", monospace;
+    --sans: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.7;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 蓝图网格 + 鼠标聚光 */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px),
+      linear-gradient(rgba(120,170,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,170,255,0.05) 1px, transparent 1px);
+    background-size: 160px 160px, 160px 160px, 32px 32px, 32px 32px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 85%);
+  }
+
+  .spotlight {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(
+      520px circle at var(--mx, 50%) var(--my, 20%),
+      rgba(111, 180, 255, 0.10),
+      transparent 60%
+    );
+    transition: background 0.12s linear;
+  }
+
+  main, header, footer { position: relative; z-index: 2; }
+
+  .wrap {
+    width: min(1080px, 88vw);
+    margin: 0 auto;
+  }
+
+  /* 顶部栏 */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 26px 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--warm);
+    margin-right: 8px;
+    box-shadow: 0 0 10px var(--warm);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+
+  /* 首屏 */
+  .hero {
+    padding: clamp(60px, 12vh, 140px) 0 clamp(60px, 10vh, 120px);
+    position: relative;
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .name {
+    font-size: clamp(56px, 13vw, 168px);
+    line-height: 0.88;
+    font-weight: 800;
+    letter-spacing: -0.045em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(232, 238, 248, 0.82);
+    text-stroke: 1.5px rgba(232, 238, 248, 0.82);
+    transition: color 0.5s ease, -webkit-text-stroke-color 0.5s ease;
+    word-break: break-word;
+  }
+  .name:hover {
+    color: rgba(111, 180, 255, 0.10);
+    -webkit-text-stroke-color: var(--accent);
+  }
+
+  .hero-sub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 36px;
+  }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    padding: 7px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--muted);
+    background: rgba(111, 180, 255, 0.04);
+    text-transform: uppercase;
+  }
+  .tag:hover { color: var(--text); border-color: var(--accent); }
+
+  .hero-desc {
+    margin-top: 42px;
+    max-width: 46ch;
+    font-size: clamp(16px, 1.5vw, 19px);
+    color: #b9c7de;
+  }
+
+  /* 齿轮装饰 */
+  .gear {
+    position: absolute;
+    right: -6%;
+    top: 8%;
+    width: clamp(220px, 34vw, 460px);
+    opacity: 0.28;
+    animation: spin 64s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 标注十字 */
+  .cross {
+    position: absolute;
+    width: 14px; height: 14px;
+    opacity: 0.5;
+  }
+  .cross::before, .cross::after {
+    content: "";
+    position: absolute;
+    background: var(--line-strong);
+  }
+  .cross::before { left: 50%; top: 0; width: 1px; height: 100%; }
+  .cross::after { top: 50%; left: 0; height: 1px; width: 100%; }
+
+  /* 章节 */
+  section {
+    padding: clamp(56px, 9vh, 96px) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .fig {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .sec-title {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--line-strong), transparent);
+  }
+
+  .lead {
+    font-size: clamp(17px, 1.6vw, 20px);
+    color: #cdd8ea;
+    max-width: 62ch;
+  }
+  .lead strong { color: var(--text); font-weight: 600; }
+  .lead .mark {
+    color: var(--warm);
+    font-family: var(--mono);
+    font-size: 0.9em;
+  }
+
+  /* 卡片 */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin-top: 44px;
+  }
+  .card {
+    position: relative;
+    padding: 26px 24px 24px;
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(111,180,255,0.05), rgba(7,12,22,0.2));
+    transition: transform 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+  }
+  .card::after {
+    content: "";
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 18px; height: 18px;
+    border-top: 1px solid var(--accent);
+    border-left: 1px solid var(--accent);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--line-strong); }
+  .card:hover::after { opacity: 1; }
+
+  .card .no {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .card h3 {
+    font-size: 19px;
+    margin: 14px 0 8px;
+    font-weight: 600;
+  }
+  .card p { font-size: 14.5px; color: var(--muted); }
+
+  /* 规格表 */
+  .specs {
+    margin-top: 44px;
+    border: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .specs .row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 20px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .specs .row:last-child { border-bottom: none; }
+  .specs .k { color: var(--muted); letter-spacing: 0.12em; font-size: 11px; text-transform: uppercase; }
+  .specs .v { color: var(--text); }
+
+  /* 联系 */
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 36px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 24px;
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+  .btn:hover {
+    background: var(--accent);
+    color: #04101f;
+    border-color: var(--accent);
+    box-shadow: 0 0 30px rgba(111, 180, 255, 0.35);
+  }
+
+  footer {
+    padding: 40px 0 60px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* 滚动出现 */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gear, .reveal, .spotlight { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+  }
+
+  @media (max-width: 640px) {
+    .specs .row { grid-template-columns: 1fr; gap: 4px; }
+    .gear { right: -28%; opacity: 0.18; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg" aria-hidden="true"></div>
+<div class="spotlight" aria-hidden="true"></div>
+
+<header class="wrap">
+  <div class="topbar">
+    <span><span class="dot"></span>DRAWING NO. QZ-2026</span>
+    <span>SCALE 1:1 · SHEET 01</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero" style="border-top:none">
+      <svg class="gear" viewBox="0 0 200 200" fill="none" stroke="#6fb4ff" stroke-width="1" aria-hidden="true">
+        <circle cx="100" cy="100" r="88" stroke-dasharray="3 6" opacity="0.5"/>
+        <circle cx="100" cy="100" r="62"/>
+        <circle cx="100" cy="100" r="18"/>
+        <g id="teeth"></g>
+      </svg>
+      <span class="cross" style="left:-24px; top:40px"></span>
+      <span class="cross" style="right:-24px; bottom:40px"></span>
+
+      <p class="kicker">Personal Blueprint / 个人主页</p>
+      <h1 class="name">qzezhou</h1>
+
+      <div class="hero-sub">
+        <span class="tag">Robotics · Mechanical</span>
+        <span class="tag">SolidWorks</span>
+        <span class="tag">Learning Agents</span>
+      </div>
+
+      <p class="hero-desc">
+        机器人队机械组成员。把零件画成能装配的东西，也把想法写成能跑起来的东西。
+      </p>
+    </section>
+
+    <section class="reveal">
+      <div class="sec-head">
+        <span class="fig">FIG. 01</span>
+        <h2 class="sec-title">关于我</h2>
+        <span class="rule"></span>
+      </div>
+      <p class="lead">
+        我是 <strong>qzezhou</strong>，在学校机器人队的<strong>机械组</strong>。
+        平时在 SolidWorks 里做结构件：建模、装配、出图，一遍遍改到它真的装得上。
+        现在也在学 <strong>Agent</strong>——不是让 AI 聊天，而是让它真的去查、去改、去验证。
+        <span class="mark">/// 还在打基础，但每块零件都在往前推。</span>
+      </p>
+    </section>
+
+    <section class="reveal">
+      <div class="sec-head">
+        <span class="fig">FIG. 02</span>
+        <h2 class="sec-title">在做的事</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <span class="no">01 / MECH</span>
+          <h3>机器人结构</h3>
+          <p>SolidWorks 零件建模、装配体、工程图。从一张草图到一个能用的机构。</p>
+        </article>
+        <article class="card">
+          <span class="no">02 / MATH</span>
+          <h3>数学基础</h3>
+          <p>线性代数与高等数学。矩阵不只是算题，它是描述旋转和变换的语言。</p>
+        </article>
+        <article class="card">
+          <span class="no">03 / CODE</span>
+          <h3>Vibe Coding</h3>
+          <p>用 AI 协作写代码：从能跑的小工具开始，慢慢理解它为什么能跑。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="sec-head">
+        <span class="fig">FIG. 03</span>
+        <h2 class="sec-title">规格表</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="specs">
+        <div class="row"><span class="k">Role</span><span class="v">机器人队 · 机械组</span></div>
+        <div class="row"><span class="k">Tool</span><span class="v">SolidWorks（学习中）</span></div>
+        <div class="row"><span class="k">Now</span><span class="v">Git / GitHub Pages / Agent Loop</span></div>
+        <div class="row"><span class="k">Status</span><span class="v">持续装配中 —— 未定版</span></div>
+      </div>
+    </section>
+
+    <section class="reveal">
+      <div class="sec-head">
+        <span class="fig">FIG. 04</span>
+        <h2 class="sec-title">联系</h2>
+        <span class="rule"></span>
+      </div>
+      <p class="lead">想聊机械结构、CAD 或者怎么让 AI 干活，随时找我。</p>
+      <div class="contact">
+        <a class="btn" href="https://github.com/qzezhou" target="_blank" rel="noopener">GitHub ↗</a>
+        <a class="btn" href="#top">回到顶部 ↑</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap">
+  <span>© 2026 qzezhou</span>
+  <span>Built with GitHub Pages</span>
+</footer>
+
+<script>
+  // 齿轮齿：用 JS 生成，省得手写几百行 path
+  (function buildTeeth() {
+    const g = document.getElementById("teeth");
+    if (!g) return;
+    const cx = 100, cy = 100, teeth = 24;
+    let d = "";
+    for (let i = 0; i < teeth; i++) {
+      const a = (i / teeth) * Math.PI * 2;
+      const a1 = a - 0.055, a2 = a + 0.055;
+      const r1 = 62, r2 = 74;
+      d += `M${(cx + Math.cos(a1) * r1).toFixed(1)},${(cy + Math.sin(a1) * r1).toFixed(1)} `;
+      d += `L${(cx + Math.cos(a1) * r2).toFixed(1)},${(cy + Math.sin(a1) * r2).toFixed(1)} `;
+      d += `L${(cx + Math.cos(a2) * r2).toFixed(1)},${(cy + Math.sin(a2) * r2).toFixed(1)} `;
+      d += `L${(cx + Math.cos(a2) * r1).toFixed(1)},${(cy + Math.sin(a2) * r1).toFixed(1)} `;
+    }
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", d);
+    path.setAttribute("opacity", "0.9");
+    g.appendChild(path);
+  })();
+
+  // 鼠标聚光
+  const root = document.documentElement;
+  window.addEventListener("pointermove", (e) => {
+    root.style.setProperty("--mx", e.clientX + "px");
+    root.style.setProperty("--my", e.clientY + "px");
+  }, { passive: true });
+
+  // 滚动淡入
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((el) => {
+      if (el.isIntersecting) {
+        el.target.classList.add("in");
+        io.unobserve(el.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>
